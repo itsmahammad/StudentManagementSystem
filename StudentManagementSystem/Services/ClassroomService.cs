@@ -10,7 +10,7 @@ namespace StudentManagementSystem.Services
 {
     public class ClassroomService : IClassroomService
     {
-        private string _filePath = "Database\\db.json";
+        private string _filePath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName,"Database", "db.json");
         private List<Classroom> _classrooms;
 
         public ClassroomService()

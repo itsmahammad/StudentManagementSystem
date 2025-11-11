@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "Id": 1,
+    "Name": "PE200",
+    "Type": 1,
+    "Students": [
+      {
+        "Id": 1,
+        "Name": "Mahammad",
+        "Surname": "Mammadov"
+      }
+    ]
+  },
+  {
+    "Id": 2,
+    "Name": "AE200",
+    "Type": 2,
+    "Students": [
+      {
+        "Id": 2,
+        "Name": "Alma",
+        "Surname": "Bananov"
+      }
+    ]
+  }
+]

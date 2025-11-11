@@ -133,18 +133,6 @@ namespace StudentManagementSystem
                 }
             }
 
-            //muellim yulgulvari kalxoz yola el atdim basqa bisey aglima gelmedi bin folderindeki db.json un icindekileri proje qovluqundaki db.jsona kocurur programi bitirende
-
-            string binJson = "Database\\db.json";
-            string projectJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Database\db.json");
-
-            binJson = Path.GetFullPath(binJson);
-            projectJson = Path.GetFullPath(projectJson);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(projectJson)!);
-
-            File.Copy(binJson, projectJson, overwrite: true);
-
 
         }
     }
