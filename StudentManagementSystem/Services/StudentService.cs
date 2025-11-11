@@ -41,7 +41,7 @@ namespace StudentManagementSystem.Services
 
             int maxStudents = targetClassroom.Type == Enums.ClassroomType.Backend ? 20 : 15;
             if (targetClassroom.Students.Count >= maxStudents)
-                throw new Exception("Classroom is full.");
+                throw new Exception("Classroom is full max for backend is 20 for frontend 15 .");
 
             Student newStudent = new Student(name, surname);
             targetClassroom.Students.Add(newStudent);
