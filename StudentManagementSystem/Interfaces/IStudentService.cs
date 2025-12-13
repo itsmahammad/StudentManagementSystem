@@ -5,9 +5,10 @@ namespace StudentManagementSystem.Interfaces
 {
     public interface IStudentService
     {
-        Student CreateStudent(int classroomId, string name, string surname);
-        void DeleteStudent(int studentId);
+        void CreateStudent(string name, string surname, int classroomId);
+        Student? GetStudentById(int id);
         List<Student> GetAllStudents();
-        List<Student> GetByClassroom(int classroomId);
+        List<Student> GetStudentsByClassroom(int classroomId);
+        void DeleteStudent(int id);
     }
 }

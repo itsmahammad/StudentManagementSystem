@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using StudentManagementSystem.Database;
 using StudentManagementSystem.Exceptions;
 using StudentManagementSystem.Helpers;
 using StudentManagementSystem.Interfaces;
@@ -8,106 +10,70 @@ namespace StudentManagementSystem.Services
 {
     public class StudentService : IStudentService
     {
-        private string _filePath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName,"Database","db.json");
- 
-        private List<Classroom> _classrooms;
+        private readonly AppDbContext context;
 
-        public StudentService(List<Classroom> classrooms)
+        public StudentService(AppDbContext context)
         {
-            string json = File.Exists(_filePath) ? File.ReadAllText(_filePath) : "[]";
-            _classrooms = JsonConvert.DeserializeObject<List<Classroom>>(json) ?? new List<Classroom>();
-
-            Classroom.InitializeCounter(_classrooms);
-            Student.InitializeCounter(_classrooms);
-            _classrooms = classrooms;
+            this.context = context;
         }
 
-        public Student CreateStudent(int classroomId, string name, string surname)
+        public void CreateStudent(string name, string surname, int classroomId)
         {
-            if (!ValidationExtensions.IsValidName(name) || !ValidationExtensions.IsValidSurname(surname))
-                throw new ArgumentException("Name and Surname should be at least 3 symbols and start with uppercase and do not contain whitespaces");
+            var classroom = context.Classrooms
+               .Include(c => c.Students)
+               .FirstOrDefault(c => c.Id == classroomId);
 
-            Classroom targetClassroom = null;
-            for (int i = 0; i < _classrooms.Count; i++)
+            if (classroom == null)
+                throw new ClassroomNotFoundException($"Classroom with Id {classroomId} not found.");
+
+            if (classroom.Type == Enums.ClassroomType.Backend && classroom.Students.Count >= 20 ||
+                classroom.Type == Enums.ClassroomType.Frontend && classroom.Students.Count >= 15)
             {
-                if (_classrooms[i].Id == classroomId)
-                {
-                    targetClassroom = _classrooms[i];
-                    break;
-                }
+                throw new Exception("Classroom limit reached.");
             }
 
-            if (targetClassroom == null)
-                throw new ClassroomNotFoundException("Classroom not found.");
+            var student = new Student
+            {
+                Name = name,
+                Surname = surname
+            };
 
-            int maxStudents = targetClassroom.Type == Enums.ClassroomType.Backend ? 20 : 15;
-            if (targetClassroom.Students.Count >= maxStudents)
-                throw new Exception("Classroom is full max for backend is 20 for frontend 15 .");
-
-            Student newStudent = new Student(name, surname);
-            targetClassroom.Students.Add(newStudent);
-
-            SaveToFile();
-            return newStudent;
+            classroom.Students.Add(student);
+            context.SaveChanges();
         }
 
-        public void DeleteStudent(int studentId)
+        public void DeleteStudent(int id)
         {
-            bool removed = false;
+            var student = context.Students.Find(id);
+            if (student == null)
+                throw new StudentNotFoundException($"Student with Id {id} not found.");
 
-            for (int i = 0; i < _classrooms.Count; i++)
-            {
-                var students = _classrooms[i].Students;
-                for (int j = 0; j < students.Count; j++)
-                {
-                    if (students[j].Id == studentId)
-                    {
-                        students.RemoveAt(j);
-                        removed = true;
-                        break;
-                    }
-                }
-                if (removed) break;
-            }
-
-            if (!removed)
-                throw new StudentNotFoundException("Student not found.");
-
-            SaveToFile();
+            context.Students.Remove(student);
+            context.SaveChanges();
         }
 
         public List<Student> GetAllStudents()
         {
-            List<Student> allStudents = new List<Student>();
-            for (int i = 0; i < _classrooms.Count; i++)
-            {
-                allStudents.AddRange(_classrooms[i].Students);
-            }
-            return allStudents;
+            return context.Students
+                .Include(s => s.Classroom)
+                .ToList();
         }
 
-        public List<Student> GetByClassroom(int classroomId)
+        public Student? GetStudentById(int id)
         {
-            Classroom targetClassroom = null;
-            for (int i = 0; i < _classrooms.Count; i++)
-            {
-                if (_classrooms[i].Id == classroomId)
-                {
-                    targetClassroom = _classrooms[i];
-                    break;
-                }
-            }
-
-            if (targetClassroom == null)
-                throw new ClassroomNotFoundException("Classroom not found.");
-
-            return targetClassroom.Students;
+            return context.Students.Find(id);
         }
 
-        private void SaveToFile()
+        public List<Student> GetStudentsByClassroom(int classroomId)
         {
-            string json = JsonConvert.SerializeObject(_classrooms, Formatting.Indented);
-            File.WriteAllText(_filePath, json);
+            var classroom = context.Classrooms
+                .Include(c => c.Students)
+                .FirstOrDefault(c => c.Id == classroomId);
+
+            if (classroom == null)
+                throw new ClassroomNotFoundException($"Classroom with Id {classroomId} not found.");
+
+            return (List<Student>)classroom.Students;
         }
     }
 }

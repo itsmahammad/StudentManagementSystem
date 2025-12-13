@@ -6,8 +6,8 @@ namespace StudentManagementSystem.Interfaces
 {
     public interface IClassroomService
     {
-        Classroom CreateClassroom(string name, ClassroomType type);
+        void CreateClassroom(string name, ClassroomType type);
+        Classroom? GetClassroomById(int id);
         List<Classroom> GetAllClassrooms();
-        Classroom GetById(int id);
     }
 }
